@@ -5,7 +5,7 @@ import time
 """
 Author:         Nick Loden
 
-Last Update:    02/01/2021
+Last Update:    02/06/2021
 
 Description:    This script will take in a stock ticker and an optional refresh frequency in seconds, and output
                 near real time statistics about the stock specified. This script utilizes the yahoo finance api
@@ -27,7 +27,6 @@ Installation/Configuration Guidance:
         pip install requests_html
         pip install yahoo_fin
 """
-
 
 
 def validate_input():
@@ -67,7 +66,7 @@ def validate_input():
         sys.exit()
     # ensure length of string is greater than 0 and less than 5
     elif len(sys.argv[1]) < 1 or len(sys.argv[1]) > 5:
-        print("Error: The ticker provided must contain 2 - 5 alpha characters.")
+        print("Error: The ticker provided must contain 1 - 5 alpha characters.")
         sys.exit()
 
     # test single yahoo finance api call to see if ticker provided is legit
@@ -82,6 +81,25 @@ def validate_input():
 
     # return list of vetted argument(s)
     return validated_args
+
+
+def symbol_checker():
+    up_arrow = ''
+    down_arrow = ''
+
+    try:
+        up_arrow = u'\u2191'  # up arrow symbol
+        down_arrow = u'\u2193'  # down arrow symbol
+
+        output_string = "\r{} {}".format(up_arrow, down_arrow)
+        print(output_string)
+    except Exception:
+        up_arrow = '^'  # up arrow symbol
+        down_arrow = 'v'  # down arrow symbol
+    finally:
+        sys.stdout.flush()
+
+    return up_arrow, down_arrow
 
 
 def get_stock_price(ticker):
@@ -111,7 +129,7 @@ def dynamic_stock_price_output(ticker, frequency=2):
     # declare function variables
     old_price = 0.0
     new_price = 0.0
-    arrow = ""
+    up_arrow, down_arrow = symbol_checker()
 
     # print out static information:
     print(' ------------------------')
@@ -130,16 +148,20 @@ def dynamic_stock_price_output(ticker, frequency=2):
 
             # compare current price against previous price
             if new_price > old_price:
-                arrow = u'\u2191'  # up arrow symbol
+                arrow = up_arrow  # up arrow symbol
             elif new_price < old_price:
-                arrow = u'\u2193'  # down arrow symbol
+                arrow = down_arrow  # down arrow symbol
             else:
                 arrow = ''  # blank arrow indicating no price change
 
             # output dynamic text with current date/time stamp and price with arrow
-            output_string = "\rTime: {} | Price: {:.2f} {}".format(time.strftime('%H:%M:%S'), new_price, arrow)
-            sys.stdout.write(output_string)
-            sys.stdout.flush()
+            print('\r', end='')
+            print("Time: {} | Price: {:.2f} {}".format(time.strftime('%H:%M:%S'), new_price, arrow), end='', flush=True)
+
+            # original way to display dynamic text output - python 2.x preferred way
+            # output_string = "\rTime: {} | Price: {:.2f} {}".format(time.strftime('%H:%M:%S'), new_price, arrow)
+            # sys.stdout.write(output_string)
+            # sys.stdout.flush()
 
             # set old price to new price to compare for next loop cycle
             old_price = new_price

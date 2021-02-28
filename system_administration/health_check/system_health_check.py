@@ -1,11 +1,12 @@
 import socket
 import psutil
 import time
+import platform
 
 """
 Author:         Nick Loden
 
-Last Update:    02/06/2021
+Last Update:    02/27/2021
 
 Description:    This script will provide basic system information and utilization statistics that one could use
                 to determine the overall health of said system.
@@ -29,6 +30,16 @@ def get_hostname():
     return socket.gethostname()
 
 
+def get_ipv4_addr():
+    """returns the ipv4 address of the host"""
+    return socket.gethostbyname(socket.gethostname())
+
+
+def get_os():
+    """returns the operating system of system"""
+    return platform.platform()
+
+
 def get_boot_time():
     """returns boot time of system."""
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(psutil.boot_time()))
@@ -39,6 +50,11 @@ def get_core_counts():
     physical_count = psutil.cpu_count(logical=False)
     logical_count = psutil.cpu_count(logical=True)
     return physical_count, logical_count
+
+
+def get_cpu_arch():
+    """returns the architecture of the cpu"""
+    return platform.processor()
 
 
 def get_cpu_util(poll_time=1):
@@ -125,8 +141,11 @@ def health_check():
     """combine health check functions and output results"""
     # call other functions and assign return values to local variables
     hostname = get_hostname()
+    ip_addr = get_ipv4_addr()
+    os = get_os()
     boot_time = get_boot_time()
     physical_cores, logical_cores = get_core_counts()
+    cpu_arch = get_cpu_arch()
     network_interfaces = get_network_interfaces()
     cpu_util = get_cpu_util()
     one, five, fifteen = get_cpu_load_avg()
@@ -140,8 +159,10 @@ def health_check():
     print('| System Info |')
     print(' -------------')
     print('Hostname: {}'.format(hostname))
+    print('IPv4 Address: {}'.format(ip_addr))
+    print('OS: {}'.format(os))
     print('Boot Time: {}'.format(boot_time))
-    print('CPU: Physical Cores: {} | Logical Cores: {}'.format(physical_cores, logical_cores))
+    print('CPU: Physical Cores: {} | Logical Cores: {} | Arch: {}'.format(physical_cores, logical_cores, cpu_arch))
     print('Network Interfaces: {}'.format(', '.join(network_interfaces)))
     print('')
 

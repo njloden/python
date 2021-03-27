@@ -24,10 +24,6 @@ systemctl enable nginx
 systemctl start nginx
 systemctl status nginx
 
-# git config
-git config --global user.name "njloden"
-git config --global user.email "njloden@gmail.com"
-
 # clone repo containing nginx conf and python web apps
 git clone https://github.com/njloden/python.git
 

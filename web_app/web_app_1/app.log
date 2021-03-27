@@ -1,0 +1,15 @@
+ * Serving Flask app "web_app_1" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+ * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 124-650-238
+192.168.56.1 - - [27/Mar/2021 11:07:36] "[37mGET / HTTP/1.1[0m" 200 -
+127.0.0.1 - - [27/Mar/2021 11:15:51] "[37mGET / HTTP/1.0[0m" 200 -
+127.0.0.1 - - [27/Mar/2021 11:15:54] "[37mGET / HTTP/1.0[0m" 200 -
+127.0.0.1 - - [27/Mar/2021 11:15:55] "[37mGET / HTTP/1.0[0m" 200 -
+127.0.0.1 - - [27/Mar/2021 11:16:08] "[37mGET / HTTP/1.0[0m" 200 -
+127.0.0.1 - - [27/Mar/2021 11:16:08] "[37mGET / HTTP/1.0[0m" 200 -

@@ -36,16 +36,4 @@ cp nginx.conf /etc/nginx/nginx.conf
 systemctl restart nginx
 systemctl status nginx | grep Active
 
-# startup all flask web applications
-./start_all_web_apps.sh
-
-# test out nginx, and direct connection to all three web applications
-curl http://localhost:80
-curl http://localhost:5001
-curl http://localhost:5002
-curl http://localhost:5003
-
-
-
-
 

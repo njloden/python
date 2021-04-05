@@ -32,6 +32,16 @@ def instance_uuid():
     return 'Instance UUID: {}'.format(uuid)
 
 
+@app.route('/long_query/<num>')
+def long_running_query(num=1000000):
+    """Sort an array of randomly generated numbers, and return the execution time. If no number
+    is specified, then the default value of 1,000,000 will be used."""
+    start_time = time.time()
+    sorted_array = sorted([random.random() for i in range(int(num))])
+    end_time = time.time()
+    return 'It took {} seconds to sort an array of {} random numbers!'.format(str(end_time - start_time), num)
+
+
 def gen_instance_uuid():
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range (20))
 

@@ -1,6 +1,8 @@
 # The Ambassador Design Pattern
 ## Commonly used to broker requests between an application and other resources or the end users. In this example, we will apply this design pattern to implement http request splitting. This can be very useful if you wish to only roll out a new build to a fraction of your user population. Here, we deploy two simple flask web applications, one for prod and one for the new experimental version. Then we spin up an nginx proxy container to act as our ambassador/broker, and split the requests between each web application. 90% of requests should reach the prod web app, while only 10% should hit the new experimental version. This is ultimately handled by the weightdirective in nginx, with a value of 9 set for the production web application. 
 
+![request splitting architecture diagram](ambassador_request_splitting_arch.png)
+
 ## Prerequisites:  
 Install the docker engine before proceeding.  
 

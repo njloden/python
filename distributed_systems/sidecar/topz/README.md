@@ -1,5 +1,8 @@
 # The Sidecar Design Pattern 
 ## Commonly used to augment or compliment an existing application by running an additional application along side of it. The example provided here allows one to run a topz system utilization container along with an existing web application to get a view of the running processes and the resources they are consuming via a simple web interface. 
+ 
+![topz architecture diagram](sidecar_topz_arch.png)
+
 
 ## Prerequisites:
 Install the docker engine before proceeding.

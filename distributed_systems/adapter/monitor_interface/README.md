@@ -4,10 +4,13 @@
 ![monitor_interface architecture diagram](adapter_monitor_interface_arch.png)
 
 ## Prerequisites:  
-Install the docker engine before proceeding.  
+Install the docker engine and docker compose before proceeding.  
 
 Offical Docker install reference:  
 https://docs.docker.com/engine/install  
+
+Offical Docker compose install reference:
+https://docs.docker.com/compose/install/
 
 ## Build Procedure:
 1. Ensure docker is installed correctly by verifying the version:  

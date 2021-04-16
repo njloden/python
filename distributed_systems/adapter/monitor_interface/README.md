@@ -9,7 +9,7 @@ Install the docker engine and docker compose before proceeding.
 Offical Docker install reference:  
 https://docs.docker.com/engine/install  
 
-Offical Docker compose install reference:
+Offical Docker compose install reference:   
 https://docs.docker.com/compose/install/
 
 ## Build Procedure:

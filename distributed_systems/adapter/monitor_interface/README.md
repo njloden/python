@@ -42,6 +42,4 @@ https://docs.docker.com/compose/install/
  
   ![prometheus_targets](prometheus_targets.png)
 
-*Note: Prometheus is actually monitoring itself as you can see prometheus:9090 as one of the endpoints. You can also see the web_app:5001 endpoint which manually implemented the prometheus client library to expose the /metrics endpoint (suboptimal). The last endpoint is the redis_exporter:9121 which acts on behalf of the redis container, and exposes its metrics to the prometheus service via the expected interface (optimal).
-
-
+*Note: Prometheus is actually monitoring itself as you can see prometheus:9090 as one of the endpoints. You can also see the redis_exporter:9121 endpoint, which acts on behalf of the redis container, and exposes its metrics to the prometheus service via the expected interface (optimal). The last endpoint is web_app:5001, which manually implemented the prometheus client library to expose the /metrics endpoint (suboptimal).

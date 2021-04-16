@@ -36,6 +36,7 @@ https://docs.docker.com/engine/install
   ```
   
 6. You should see three endpoints, and ensure the state of each endpoint is 'UP':   
+ 
   ![prometheus_targets](prometheus_targets.png)
 
 *Note: Prometheus is actually monitoring itself as you can see prometheus:9090 as one of the endpoints. You can also see the web_app:5001 endpoint which manually implemented the prometheus client library to expose the /metrics endpoint (suboptimal). The last endpoint is the redis_exporter:9121 which acts on behalf of the redis container, and exposes its metrics to the prometheus service via the expected interface (optimal).

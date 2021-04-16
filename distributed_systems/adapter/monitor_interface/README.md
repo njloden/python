@@ -10,58 +10,34 @@ Offical Docker install reference:
 https://docs.docker.com/engine/install  
 
 ## Build Procedure:
-1. Build docker image for flask production web application:  
+1. Ensure docker is installed correctly by verifying the version:  
   ```shell
-  sudo docker build --tag web-app-prod:latest ./app_prod  
+  sudo docker --version 
   ```
   
-2. Run the newly built image:  
+2. Ensure docker compose is installed correctly by verifying the version:  
   ```shell  
-  sudo docker run -d -p 5001:5001 --name web-app-prod web-app-prod   
+  sudo docker-compose --version   
   ```
   
-3. Ensure container is running and send a request to the app to make sure it is responding to requests:  
+3. Navigate to the monitor_interface directory, and then start up all containers via docker compose  
   ```shell  
-  sudo docker ps  
-  curl http://localhost:5001  
+  sudo docker-compose up -d 
   ```
 
-4. Build docker image for flask experimental web application:  
-  ```shell
-  sudo docker build --tag web-app-experiment:latest ./app_experiment
-  ```
-
-5. Run the newly built image:  
-  ```shell
-  sudo docker run -d -p 5002:5002 --name web-app-experiment web-app-experiment   
-  ```
-  
-6. Ensure container is running and send a request to the app to make sure it is responding to requests:   
-  ```shell
-  sudo docker ps  
-  curl http://localhost:5002  
-  ```
-
-7. Build docker image for nginx reverse proxy which will act as the ambassador and split requests:  
-  ```shell
-  sudo docker build --tag nginx-proxy:latest ./proxy 
-  ```
-  
-8. Run the newly built image, and link to the other containers so nginx knows where to proxy requests:  
-  ```shell
-  sudo docker run -d -p 8080:8080 --link web-app-prod:web-app-prod --link web-app-experiment:web-app-experiment --name nginx-proxy nginx-proxy
-  ```
-  
-9. Ensure container is running and send a request to the app to make sure it is responding to requests:  
+4. Wait a few seconds, and then check the health of each container:  
   ```shell
   sudo docker ps
-  curl http://localhost:8080
+  ```
+
+5. Open a web browser, and navigate to the following URL to access the prometheus monitoring service:  
+  ```shell
+  http://localhost:9090/classic/targets   
   ```
   
-10. Nginx is configured to send 90% of requests to the prod app, and 10% to the experimental version. Send 10 requests to the nginx reverse proxy/ambassador, and ensure at least one request is being routed to the experimental web application:
-  ```shell
-  for i in {1..10}; do
-    curl http://localhost:8080 && echo ""
-  done 
-  ```
+6. You should see three endpoints, and ensure the state of each endpoint is 'UP':   
+  ![prometheus_targets](prometheus_targets.png)
+
+*Note: Prometheus is actually monitoring itself as you can see prometheus:9090 as one of the endpoints. You can also see the web_app:5001 endpoint which manually implemented the prometheus client library to expose the /metrics endpoint (suboptimal). The last endpoint is the redis_exporter:9121 which acts on behalf of the redis container, and exposes its metrics to the prometheus service via the expected interface (optimal).
+
 

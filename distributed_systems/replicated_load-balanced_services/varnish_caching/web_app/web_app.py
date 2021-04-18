@@ -42,6 +42,12 @@ def long_running_query(num=1000000):
     return 'It took {} seconds to sort an array of {} random numbers!'.format(str(end_time - start_time), num)
 
 
+@app.route('/sleep')
+def sleep_and_respond():
+    """sleep for one second, and then send response to client"""
+    time.sleep(1)
+    return 'I was asleep for one whole second!'
+
 def gen_instance_uuid():
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range (20))
 

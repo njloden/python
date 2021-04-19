@@ -22,6 +22,7 @@ sub vcl_init {
 # disable caching for specific URLs where unique dynamic content will be generated with each request
 sub vcl_recv {
   if (req.url == "/time") {
+    set req.backend_hint = varnish_lb.backend();
     return (pass);
   }
 

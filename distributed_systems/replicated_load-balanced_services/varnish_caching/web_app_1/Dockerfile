@@ -15,5 +15,5 @@ EXPOSE 5001
 
 # use python to execute the flask web application
 ENTRYPOINT [ "python" ]
-CMD [ "web_app.py" ]
+CMD [ "web_app_1.py" ]
 

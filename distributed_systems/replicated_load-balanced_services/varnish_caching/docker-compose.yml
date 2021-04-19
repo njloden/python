@@ -1,12 +1,19 @@
 version: "3"
 
 services:
-  web_app:
+  web_app_1:
     build:
-      context: ./web_app
+      context: ./web_app_1
       dockerfile: Dockerfile
     ports:
       - "5001:5001"
+
+  web_app_2:
+    build:
+      context: ./web_app_2
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5002"
 
   varnish:
     image: varnish:latest 
@@ -15,7 +22,8 @@ services:
     volumes:
       - ./varnish/default.vcl:/etc/varnish/default.vcl 
     depends_on:
-      - web_app
+      - web_app_1
+      - web_app_2
 
   nginx:
     image: nginx:latest

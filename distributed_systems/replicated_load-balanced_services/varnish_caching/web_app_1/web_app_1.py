@@ -15,8 +15,8 @@ def welcome():
 
 @app.route('/time')
 def time_stamp():
-    current_time = '{}'.format(time.strftime('%m/%d/%Y %H:%M:%S'))
-    response = flask.Response(''.format(current_time))
+    current_time = 'Date/Time: {}'.format(time.strftime('%m/%d/%Y %H:%M:%S'))
+    response = flask.Response(current_time)
     response.headers['X-Backend-Node'] = node
     return response
 
@@ -24,7 +24,7 @@ def time_stamp():
 @app.route('/sleep')
 def sleep_and_respond():
     """sleep for one second, and then send response to client"""
-    time.sleep(1)
+    time.sleep(3)
     response = flask.Response('I was asleep for one whole second!')
     response.headers['X-Backend-Node'] = node
     return response

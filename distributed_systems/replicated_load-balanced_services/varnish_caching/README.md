@@ -1,13 +1,16 @@
-# The Adapter Design Pattern
-## Commonly used to modify the interface of an existing application, so that it adheres to requirements. In this example, we will apply this design pattern to an existing redis key value store container that doesn't have a proper interface to allow the prometheus monitoring application to scrape information from it. Prometheus expects a /metrics http endpoint to be exposed for every application being monitored, and the redis application doesn't natively provide said interface. This is where the adapter pattern fits in nicely, as we don't have to alter the redis app to enable this interface, we can simply spin up the redis_exporter container, which will sit in between redis and prometheus, and will pull stats from the former and provide to the latter in the required format. To show an alternate and suboptimal approach, we will manually update the flask web application to expose the /metrics interface using a prometheus clienty library. Note that the second approach is less modular, isn't reusable, and is  tightly coupled with the app. In addition, an issue with the prometheus client library and code could negatively impact the application container, so by using the adapter approach one can segregate these duties and prevent a failure with one impacting the other. 
+# The Replicated Load-Balanced Design Pattern
+## Commonly used to create both highly available and easily scalable services. This is one of the most basic serving patterns in distributed computing, where a load-balancer/reverse proxy sits in front of the backend services faciliating user requests. This facade allows you to lose a certain percentage of your backend compute without compromising the overall availability for your service. In addition, it makes scaling quite easy as you can simply introduce a new server/container and add it to the load balancing configuration to start receiving requests. In this specific example, we implement an nginx container as our reverse proxy which will initially handle all user requests. Nginx will then pass requests to the varnish service, which is considered an http accelerator and handles caching of requests. If a specific request is not found in the varnish cache, this is considered a miss. In this case, varnish will then pass on the request to one of the configured backends, which are load balacned in a round robin fashion. The backend will fulfill the request, and send it back to the varnish cache. Varnish will then send this request back to nginx, which will send it back to the original requestor. The real value of varnish comes in play when a request comes in that already has a cached response held in varnish. This is considered a cache hit. This means that the requests stops at varnish, and is sent right back to nginx with the response. The backends were never contacted to fulfill this request, which can drastically improve response times.
 
-![request splitting architecture diagram](ambassador_request_splitting_arch.png)
+![replicated_lb_services_varnish_caching_architecture diagram](replicated_lb_services_varnish_caching_arch.png)
 
 ## Prerequisites:  
-Install the docker engine before proceeding.  
+Install the docker engine and docker compose before proceeding.  
 
 Offical Docker install reference:  
 https://docs.docker.com/engine/install  
+
+Offical Docker compose install reference:   
+https://docs.docker.com/compose/install/
 
 ## Build Procedure:
 1. Ensure docker is installed correctly by verifying the version:  
@@ -20,7 +23,7 @@ https://docs.docker.com/engine/install
   sudo docker-compose --version   
   ```
   
-3. Navigate to the monitor_interface directory, and then start up all containers via docker compose  
+3. Navigate to the varnish_caching directory, and then start up all containers via docker compose  
   ```shell  
   sudo docker-compose up -d 
   ```
@@ -30,15 +33,11 @@ https://docs.docker.com/engine/install
   sudo docker ps
   ```
 
-5. Open a web browser, and navigate to the following URL to access the prometheus monitoring service:  
+5. In a terminal/shell, run the testing script that will send various types of http requests via curl to this replicated load-balanced service:  
   ```shell
-  http://localhost:9090/classic/targets   
+  ./testing.sh 
   ```
   
-6. You should see three endpoints, and ensure the state of each endpoint is 'UP':   
- 
-  ![prometheus_targets](prometheus_targets.png)
-
-*Note: Prometheus is actually monitoring itself as you can see prometheus:9090 as one of the endpoints. You can also see the web_app:5001 endpoint which manually implemented the prometheus client library to expose the /metrics endpoint (suboptimal). The last endpoint is the redis_exporter:9121 which acts on behalf of the redis container, and exposes its metrics to the prometheus service via the expected interface (optimal).
+6. You should see the output of three different tests. The first test simply shows you how caching is utilized in this service, and that only the first request actually makes it to a backend web application, while the other 4 are returned directly from varnish which decreases response time. The second test is used to demonstrate how to exclude specific URLs that cannot be cached and require unique content generated dynamically by the backend for every request. You will notice that the time being returned is unique for each request, which means caching is not utilized. You will also notice that the backends are being load balanced uniformly as expected. The third test demonstrates the utility of caching, as there is a /sleep URI that simulates a long running request (function sleeps for 3 seconds). You will notice that only the first request is actually handled by a backend, which takes longer than 3 seconds to complete the request. The next 4 requests never make it to this long running process and are pulled directly from cache, so this drastically reduces the response time.  
 
 

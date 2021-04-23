@@ -1,0 +1,69 @@
+version: "3"
+
+services:
+  web_app_1:
+    build:
+      context: ./shard_1
+      dockerfile: Dockerfile
+    container_name: web_app_1
+    ports:
+      - "5001:5001"
+
+  varnish_1:
+    image: varnish:latest
+    container_name: varnish_1
+    ports:
+      - "81:80"
+    volumes:
+      - ./shard_1/default.vcl:/etc/varnish/default.vcl
+    depends_on:
+      - web_app_1    
+
+  web_app_2:
+    build:
+      context: ./shard_2
+      dockerfile: Dockerfile
+    container_name: web_app_2
+    ports:
+      - "5002:5002"
+
+  varnish_2:
+    image: varnish:latest
+    container_name: varnish_2
+    ports:
+      - "82:80"
+    volumes:
+      - ./shard_2/default.vcl:/etc/varnish/default.vcl
+    depends_on:
+      - web_app_2
+
+  web_app_3:
+    build:
+      context: ./shard_3
+      dockerfile: Dockerfile
+    container_name: web_app_3
+    ports:
+      - "5003:5003"
+
+  varnish_3:
+    image: varnish:latest
+    container_name: varnish_3
+    ports:
+      - "83:80"
+    volumes:
+      - ./shard_3/default.vcl:/etc/varnish/default.vcl
+    depends_on:
+      - web_app_3
+        
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - varnish_1
+      - varnish_2
+      - varnish_3
+

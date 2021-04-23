@@ -82,7 +82,7 @@ https://docs.docker.com/compose/install/
   sudo docker ps
   ```
 
-13. Run the same test again, and you should notice that you your cache hit rate is > ~66% which was observed in the first pass. In my tests, I noticed an average cache hit rate of ~86% after removing a shard from the environment. This equates to 6 out of 10 cache hits for the initial requests sent in this test, which is far better than 0.      
+13. Run the same test again, and you should notice that your cache hit rate is > ~66% which was observed in the first pass. In my tests, I noticed an average cache hit rate of ~86% after removing a shard from the environment. This equates to 6 out of 10 cache hits for the initial requests sent in this test, which is far better than 0.      
   ```shell  
   ./testing.sh
   ```

@@ -23,11 +23,13 @@ https://docs.docker.com/compose/install/
   sudo docker-compose --version   
   ```
   
-3. Navigate to the consistent_hashing_cache, and create symbolic links for both docker-compose and nginx configuration files. Note: We are going to be swapping out these files later, so sym links will make this easier. We will start out with configuration sized for 4 shards of varnish cache and flask web app:    
+3. Navigate to the consistent_hashing_cache, and create symbolic links for both docker-compose and nginx configuration files:    
   ```shell  
   ln -s 4_shards_docker-compose.yml docker-compose.yml
   ln -s 4_shards_nginx.conf nginx.conf
   ```
+
+*Note: We are going to be swapping out these files later, so sym links will make this easier. We will start out with configuration sized for 4 shards of varnish cache and flask web app.
 
 4. Startup all containers via docker-compose:    
   ```shell  

@@ -1,7 +1,7 @@
 # The Sharded Design Pattern
 ## <Add Description Here>
 
-![monitor_interface architecture diagram](adapter_monitor_interface_arch.png)
+![sharded_services_consistent_hashing_cache architecture diagram](sharded_services_consistent_hashing_cache_arch.png)
 
 ## Prerequisites:  
 Install the docker engine and docker compose before proceeding.  

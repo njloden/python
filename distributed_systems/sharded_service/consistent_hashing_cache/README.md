@@ -47,6 +47,8 @@ https://docs.docker.com/compose/install/
   ```
 *Note which requests were served by which shards, as this will be useful to reference after we modify the environment and remove one of the shards.
 
+![test_results_1](consistent_hash_test_1_results.png)
+
 7. Remove the current sym link for docker-compose.yml file and create a new one routing the sym link to the config w/ 3 shards (removing one shard):    
   ```shell  
   rm docker-compose.yml
@@ -80,7 +82,11 @@ https://docs.docker.com/compose/install/
   sudo docker ps
   ```
 
-13. Run the same test again, and you should notice that you your cache hit rate is > ~66% which was observed in the first pass. This is due to the consistent hashing algorithm used to assign requests to shards, which should be quite useful in situations such as theses when shards are removed or added. If consistent hashing wasn't used, then you would expect to see an identical hit rate to the first test, where every initial request resulted in a cache miss.      
+13. Run the same test again, and you should notice that you your cache hit rate is > ~66% which was observed in the first pass. In my tests, I noticed an average cache hit rate of ~86% after removing a shard from the environment. This equates to 6 out of 10 cache hits for the initial requests sent in this test, which is far better than 0.      
   ```shell  
   ./testing.sh
   ```
+
+*This is due to the consistent hashing algorithm used to assign requests to shards, which should be quite useful in situations such as theses when shards are removed or added. If consistent hashing wasn't used, then you would expect to see an identical hit rate to the first test, where every initial request resulted in a cache miss. 
+
+![test_results_2](consistent_hash_test_2_results.png)

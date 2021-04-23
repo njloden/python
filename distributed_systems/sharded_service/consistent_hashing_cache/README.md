@@ -1,5 +1,5 @@
 # The Sharded Design Pattern
-## <Add Description Here>
+## Commonly used to distribute load across various resources to handle requests. This pattern is intented to be used by systems that need to retain state (stateful services) or if the size of a particular data store is too large to be handled by a single node. It is important to note that each shard cannot handle every type of request, and is only intended to respond to a subset of requests. In this example, we will apply this design pattern to a distrubuted web application that is front ended by an nginx reverse proxy. Nginx receives requests, and then distributes these requests to varnish cache shards, which in turn will send the requests to their assigned backend web applications if the request has not yet been cached.  
 
 ![sharded_services_consistent_hashing_cache architecture diagram](sharded_services_consistent_hashing_cache_arch.png)
 

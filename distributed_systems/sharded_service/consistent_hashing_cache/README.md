@@ -87,6 +87,6 @@ https://docs.docker.com/compose/install/
   ./testing.sh
   ```
 
-*This is due to the consistent hashing algorithm used to assign requests to shards, which should be quite useful in situations such as theses when shards are removed or added. If consistent hashing wasn't used, then you would expect to see an identical hit rate to the first test, where every initial request resulted in a cache miss. 
+*This is due to the consistent hashing algorithm used to assign requests to shards, which should be quite useful in situations such as these where shards are removed or added. If consistent hashing wasn't used, then you would expect to see an identical hit rate to the first test, where every initial request resulted in a cache miss. 
 
 ![test_results_2](consistent_hash_test_2_results.png)

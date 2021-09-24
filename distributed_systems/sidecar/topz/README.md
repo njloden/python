@@ -44,3 +44,4 @@ https://docs.docker.com/engine/install
   curl http://localhost:8080/topz
   ```
 
+![sidecar_topz_test_results](sidecar_topz_test_results.png)

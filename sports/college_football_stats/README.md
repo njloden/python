@@ -15,22 +15,24 @@ This script fetches college football player stats for specified teams and positi
 5. **Set your API key as an environment variable:**  
    `export CFB_API_KEY="your_api_key_here"`
 
+
 ## Usage
 
 Run the script from the command line:
 
 ```
-python get-cfb-stats.py --position [qb|rb|wr|te|pk|all] --teams "team name1" "team name2" ...
+python get-cfb-stats.py --position [qb|rb|wr|te|pk|all] --teams "team name1" "team name2" ... [--input-csv "/path/to/player_list.csv"]
 ```
 
 ### Example
 
 ```
-python get-cfb-stats.py --position qb --teams "kansas state" "iowa state"
+python get-cfb-stats.py --position qb --teams "kansas state" "iowa state" --input-csv "/home/deck/Downloads/Fantasy NCAA Player List 2025 - Player List.csv"
 ```
 
 - `--position` specifies the player position to filter (e.g., qb, rb, wr, te, pk, all).
 - `--teams` specifies one or more team names (use quotes for names with spaces).
+- `--input-csv` (optional) specifies a CSV file containing player names. If provided, only players listed in the CSV will be included in the output. The CSV should have player names in the format: `POSITION,First,Last,...` (e.g., `QB,Trey,Owens,...`).
 
 ## Notes
 

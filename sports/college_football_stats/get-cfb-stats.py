@@ -1,11 +1,14 @@
 ###
 # standard form:
-#   python get-cfb-stats.py --position [qb|rb|wr|te|pk|all] --teams "team name1" "team name2" ...
+#   python get-cfb-stats.py --position [qb|rb|wr|te|pk|all] --teams "team name1" "team name2" ... [--input-csv "/path/to/player_list.csv"]
 # example:
-#   python get-cfb-stats.py --position qb --teams "kansas state" "iowa state"
+#   python get-cfb-stats.py --position qb --teams "kansas state" "iowa state" --input-csv "/path/to/player_list.csv"
+#
+# If --input-csv is provided, only players listed in the CSV will be included in the output.
 ###
 import os
 import sys
+import csv
 import argparse
 import requests
 import pandas as pd
@@ -33,7 +36,38 @@ def parse_args():
     parser = argparse.ArgumentParser(description="College Football Player Stats Comparison")
     parser.add_argument('--position', required=True, help='Player position: qb, rb, wr, te, pk, all')
     parser.add_argument('--teams', nargs='+', required=True, help='List of team names (in quotes if spaces)')
+    parser.add_argument('--input-csv', required=False, help='Input CSV file path with player names')
     return parser.parse_args()
+
+
+def create_available_players_list_from_csv(csv_path):
+    """
+    Reads a CSV file and returns a list of all player full names (first + last) found in the file.
+    Only lines with player data are processed.
+    Example CSV:
+    WR,,,,WR,,,,WR,Malik,McClain,,WR,Romello,Brinson
+    """
+    positions = {"QB", "WR", "RB", "TE", "K", "DEF"}
+    names = set()
+    with open(csv_path, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            i = 0
+            while i < len(row) - 2:
+                pos = row[i]
+                first = row[i+1]
+                last = row[i+2]
+                if (
+                    isinstance(pos, str) and pos.strip() in positions and
+                    isinstance(first, str) and first.strip() and
+                    isinstance(last, str) and last.strip()
+                ):
+                    full_name = f"{first.strip()} {last.strip()}".lower()
+                    names.add(full_name)
+                    i += 3
+                else:
+                    i += 1
+    return names
 
 
 def create_player_dict():
@@ -53,7 +87,7 @@ def create_player_dict():
     }
 
 
-def get_team_stats(team_name):
+def get_team_stats(team_name, available_players=None):
     """
     Fetch player stats for a given team from the API.
     Args:
@@ -78,6 +112,10 @@ def get_team_stats(team_name):
 
     # Iterate over each stat record in the API response
     for record in data:
+        player_name = record["player"]
+        # Only add player if not filtering, or if player is in available_players (case-insensitive)
+        if available_players is not None and player_name.lower() not in available_players:
+            continue
         pid = record["playerId"]  # Unique player ID
         player = players[pid]  # Get or create the player entry
         # Populate player fields
@@ -97,7 +135,7 @@ def get_team_stats(team_name):
     return list(players.values())
 
 
-def build_comparison_table(players_list, position):
+def build_comparison_table(players_list, position, available_players=None):
     """
     Build and print a comparison table of player stats for a given position.
     Args:
@@ -107,21 +145,20 @@ def build_comparison_table(players_list, position):
         None
     """
     rows = []
-    # Iterate through each player in the list
+    pos_key = position.upper() if position.lower() != 'all' else None
+
     for player in players_list:
-        # Filter players by the specified position (or include all if 'all' is selected)
-        if position.lower() == "all" or player["position"].lower() == position.lower():
-            # Create a flat dictionary to hold player stats for the table
+        player_pos = player["position"].upper()
+        # Only filter by position now
+        if position.lower() == "all" or player_pos == pos_key:
             flat_stats = {
                 "Player": f"{player['player']}",
                 "Team": f"{player['team']}"
             }
-            # Flatten the nested stats dictionary into single columns
             for category, stats in player["stats"].items():
                 for stat_name, stat_val in stats.items():
-                    col_name = f"{category}_{stat_name}"  # e.g., 'passing_YDS'
+                    col_name = f"{category}_{stat_name}"
                     flat_stats[col_name] = stat_val
-            # Add the player's stats to the rows list
             rows.append(flat_stats)
 
     # If no players matched the position, print a message and exit the function
@@ -160,14 +197,24 @@ def main():
     args = parse_args()
     position = args.position
     team_list = args.teams
+    input_path = args.input_csv
 
-    # Initialize a list to hold all player data from all teams
-    all_players = []
+    # if provided as an arg, check file and extract all available players from CSV
+    if input_path is not None:
+        if not os.path.isfile(input_path) or not os.access(input_path, os.R_OK):
+            print(f"Error: The file '{input_path}' does not exist or is not readable.")
+            sys.exit(1)
+        available_players = create_available_players_list_from_csv(input_path)
+    else:
+        available_players = None
+
     # Loop through each team, fetch player stats, and add them to the list
+    all_players = []
     for team in team_list:
-        all_players.extend(get_team_stats(format_team_name(team)))
+        all_players.extend(get_team_stats(format_team_name(team), available_players=available_players))
+
     # Build and print the comparison table for the specified position
-    build_comparison_table(all_players, position)
+    build_comparison_table(all_players, position, available_players=available_players)
 
 
 if __name__ == "__main__":

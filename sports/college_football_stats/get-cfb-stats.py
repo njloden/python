@@ -6,11 +6,12 @@
 # examples:
 #   python get-cfb-stats.py --position wr --teams "purdue" "indiana"
 #   python get-cfb-stats.py --position qb --teams "kansas state" "iowa state" --input-csv "/path/to/player_list.csv"
-#   python get-cfb-stats.py --position rb --teams "alabama" "notre dame" \
+#   python get-cfb-stats.py --position qb --teams "kansas state" ... \
 #      --input-google-sheet-id "<sheet_id>" \
 #      --input-google-sheet-range "<sheet_range>" \
 #      --input-google-sheet-auth-path "/path/to/client_secret.json"
-# If --input-csv or -input-google-sheet* are provided, only players listed in the input sources will be included in the output.
+# notes:
+#   if --input-csv or -input-google-sheet* are provided, only players listed in the input sources will be included in the output.
 ###
 import os
 import sys
@@ -21,7 +22,9 @@ import pandas
 import collections
 import tabulate
 import gspread
-import oauth2client
+from oauth2client.file import Storage
+from oauth2client import tools
+from oauth2client.client import flow_from_clientsecrets
 
 
 # extract API key from environment variable
@@ -95,14 +98,20 @@ def get_sheet_values(sheet_id, range_name, client_secret_path, token_path='token
     """
     import os
     scope = [
-        'https://spreadsheets.google.com/feeds',
+        'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
     ]
-    store = oauth2client.file.Storage(token_path)
+    store = Storage(token_path)
     creds = store.get()
     if not creds or creds.invalid:
-        flow = oauth2client.client.flow_from_clientsecrets(client_secret_path, scope)
-        creds = oauth2client.tools.run_flow(flow, store)
+        flow = flow_from_clientsecrets(client_secret_path, scope)
+        flags = argparse.Namespace(
+            auth_host_name='localhost',
+            noauth_local_webserver=False,
+            auth_host_port=[8080, 8090],
+            logging_level='ERROR'
+        )
+        creds = tools.run_flow(flow, store, flags=flags)
     client = gspread.authorize(creds)
     sheet = client.open_by_key(sheet_id)
     worksheet = sheet.worksheet(range_name.split('!')[0])

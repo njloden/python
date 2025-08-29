@@ -1,10 +1,4 @@
 ###
-# Google Sheets input example:
-#   python get-cfb-stats.py --position qb --teams "nebraska" \
-#      --input-google-sheet-id "aaaabbbbbcccccc111112222223333333" \
-#      --input-google-sheet-range 'Player List!A1:Z1000' \
-#      --input-google-sheet-auth-path "/home/deck/college-football-api/oauth-secret/google-oauth-client-creds.json"
-###
 # standard form:
 #   python get-cfb-stats.py --position [qb|rb|wr|te|pk|all] --teams "team name1" "team name2" ... \
 #     [--input-csv "/path/to/player_list.csv"] \

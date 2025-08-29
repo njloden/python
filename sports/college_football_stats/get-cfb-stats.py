@@ -6,7 +6,7 @@
 # examples:
 #   python get-cfb-stats.py --position wr --teams "purdue" "indiana"
 #   python get-cfb-stats.py --position qb --teams "kansas state" "iowa state" --input-csv "/path/to/player_list.csv"
-#   python get-cfb-stats.py --position qb --teams "kansas state" ... \
+#   python get-cfb-stats.py --position rb --teams "alabama" "notre dame" \
 #      --input-google-sheet-id "<sheet_id>" \
 #      --input-google-sheet-range "<sheet_range>" \
 #      --input-google-sheet-auth-path "/path/to/client_secret.json"
@@ -17,13 +17,11 @@ import sys
 import csv
 import argparse
 import requests
-import pandas as pd
-from collections import defaultdict
-from tabulate import tabulate
+import pandas
+import collections
+import tabulate
 import gspread
-from oauth2client.file import Storage
-from oauth2client import tools
-from oauth2client.client import flow_from_clientsecrets
+import oauth2client
 
 
 # extract API key from environment variable
@@ -100,11 +98,11 @@ def get_sheet_values(sheet_id, range_name, client_secret_path, token_path='token
         'https://spreadsheets.google.com/feeds',
         'https://www.googleapis.com/auth/drive'
     ]
-    store = Storage(token_path)
+    store = oauth2client.file.Storage(token_path)
     creds = store.get()
     if not creds or creds.invalid:
-        flow = flow_from_clientsecrets(client_secret_path, scope)
-        creds = tools.run_flow(flow, store)
+        flow = oauth2client.client.flow_from_clientsecrets(client_secret_path, scope)
+        creds = oauth2client.tools.run_flow(flow, store)
     client = gspread.authorize(creds)
     sheet = client.open_by_key(sheet_id)
     worksheet = sheet.worksheet(range_name.split('!')[0])
@@ -142,7 +140,7 @@ def create_player_dict():
         "position": None,
         "team": None,
         "conference": None,
-        "stats": defaultdict(dict)
+        "stats": collections.defaultdict(dict)
     }
 
 
@@ -167,7 +165,7 @@ def get_team_stats(team_name, available_players=None):
     # Parse the JSON response from the API
     data = resp.json()
     # Create a defaultdict to store player data, keyed by playerId
-    players = defaultdict(create_player_dict)
+    players = collections.defaultdict(create_player_dict)
 
     # Iterate over each stat record in the API response
     for record in data:
@@ -226,13 +224,13 @@ def build_comparison_table(players_list, position, available_players=None):
         return
 
     # Create a DataFrame from the rows and fill missing values with empty strings
-    df = pd.DataFrame(rows).fillna("")
+    df = pandas.DataFrame(rows).fillna("")
     # Transpose the DataFrame so stats are rows and players are columns
     df = df.set_index("Player").T  # transpose: stats as rows, players as columns
 
     # Print the position and the formatted table
     print(f"\nPosition: {position}\n")
-    print(tabulate(df, headers="keys", tablefmt="fancy_grid"))
+    print(tabulate.tabulate(df, headers="keys", tablefmt="fancy_grid"))
 
 
 def format_team_name(team):

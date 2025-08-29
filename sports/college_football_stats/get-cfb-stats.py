@@ -1,10 +1,22 @@
 ###
+# Google Sheets input example:
+#   python get-cfb-stats.py --position qb --teams "nebraska" \
+#      --input-google-sheet-id "aaaabbbbbcccccc111112222223333333" \
+#      --input-google-sheet-range 'Player List!A1:Z1000' \
+#      --input-google-sheet-auth-path "/home/deck/college-football-api/oauth-secret/google-oauth-client-creds.json"
+###
 # standard form:
-#   python get-cfb-stats.py --position [qb|rb|wr|te|pk|all] --teams "team name1" "team name2" ... [--input-csv "/path/to/player_list.csv"]
-# example:
+#   python get-cfb-stats.py --position [qb|rb|wr|te|pk|all] --teams "team name1" "team name2" ... \
+#     [--input-csv "/path/to/player_list.csv"] \
+#     [-input-google-sheet-id "sheet id" --input-google-sheet-range "sheet_range" --input-google-sheet-auth-path "/path/to/client_secret.json"]
+# examples:
+#   python get-cfb-stats.py --position wr --teams "purdue" "indiana"
 #   python get-cfb-stats.py --position qb --teams "kansas state" "iowa state" --input-csv "/path/to/player_list.csv"
-#
-# If --input-csv is provided, only players listed in the CSV will be included in the output.
+#   python get-cfb-stats.py --position qb --teams "kansas state" ... \
+#      --input-google-sheet-id "<sheet_id>" \
+#      --input-google-sheet-range "<sheet_range>" \
+#      --input-google-sheet-auth-path "/path/to/client_secret.json"
+# If --input-csv or -input-google-sheet* are provided, only players listed in the input sources will be included in the output.
 ###
 import os
 import sys
@@ -14,6 +26,11 @@ import requests
 import pandas as pd
 from collections import defaultdict
 from tabulate import tabulate
+import gspread
+from oauth2client.file import Storage
+from oauth2client import tools
+from oauth2client.client import flow_from_clientsecrets
+
 
 # extract API key from environment variable
 API_KEY = os.environ.get("CFB_API_KEY")
@@ -37,10 +54,13 @@ def parse_args():
     parser.add_argument('--position', required=True, help='Player position: qb, rb, wr, te, pk, all')
     parser.add_argument('--teams', nargs='+', required=True, help='List of team names (in quotes if spaces)')
     parser.add_argument('--input-csv', required=False, help='Input CSV file path with player names')
+    parser.add_argument('--input-google-sheet-id', required=False, help='Input google sheet id with player names')
+    parser.add_argument('--input-google-sheet-range', required=False, help='Input google sheet range with player names')
+    parser.add_argument('--input-google-sheet-auth-path', required=False, help='Input google sheet oauth client secret path')
     return parser.parse_args()
 
 
-def create_available_players_list_from_csv(csv_path):
+def extract_full_names_from_csv(csv_path):
     """
     Reads a CSV file and returns a list of all player full names (first + last) found in the file.
     Only lines with player data are processed.
@@ -68,6 +88,51 @@ def create_available_players_list_from_csv(csv_path):
                 else:
                     i += 1
     return names
+
+
+def get_sheet_values(sheet_id, range_name, client_secret_path, token_path='token.json'):
+    """
+    Fetches values from a private Google Sheet using OAuth2 user credentials (Installed App flow).
+    Args:
+        sheet_id (str): The Google Sheet ID.
+        range_name (str): The A1 notation range (e.g., 'Sheet1!A1:E100').
+        client_secret_path (str): Path to the OAuth2 client_secret.json file.
+        token_path (str): Path to store the user's access/refresh token.
+    Returns:
+        list: List of rows (each row is a list of cell values as strings).
+    """
+    import os
+    scope = [
+        'https://spreadsheets.google.com/feeds',
+        'https://www.googleapis.com/auth/drive'
+    ]
+    store = Storage(token_path)
+    creds = store.get()
+    if not creds or creds.invalid:
+        flow = flow_from_clientsecrets(client_secret_path, scope)
+        creds = tools.run_flow(flow, store)
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key(sheet_id)
+    worksheet = sheet.worksheet(range_name.split('!')[0])
+    return worksheet.get_all_values()
+
+
+def extract_full_names_from_sheets(rows):
+    """
+    Given a list of rows (each a list of strings), extract first and last names
+    (assuming the pattern: [position, first, last, ...]), combine them, and return a list of full names.
+    """
+    full_names = []
+    for row in rows:
+        i = 0
+        while i < len(row) - 2:
+            pos, first, last = row[i], row[i+1], row[i+2]
+            if pos and first and last:
+                full_names.append(f"{first} {last}")
+                i += 3
+            else:
+                i += 1
+    return full_names
 
 
 def create_player_dict():
@@ -197,14 +262,24 @@ def main():
     args = parse_args()
     position = args.position
     team_list = args.teams
-    input_path = args.input_csv
+    input_csv_path = args.input_csv
+    input_google_sheet_id = args.input_google_sheet_id
+    input_google_sheet_range = args.input_google_sheet_range
+    input_google_sheet_client_auth_path = args.input_google_sheet_auth_path
+    # if google sheet args are provided, ensure all are present
+    if (input_google_sheet_id or input_google_sheet_range or input_google_sheet_client_auth_path) and not (input_google_sheet_id and input_google_sheet_range and input_google_sheet_client_auth_path):
+        print("Error: If using Google Sheet input, please provide --input-google-sheet-id, --input-google-sheet-range, and --input-google-sheet-auth-path.")
+        sys.exit(1)    
 
     # if provided as an arg, check file and extract all available players from CSV
-    if input_path is not None:
-        if not os.path.isfile(input_path) or not os.access(input_path, os.R_OK):
-            print(f"Error: The file '{input_path}' does not exist or is not readable.")
+    if input_csv_path is not None:
+        if not os.path.isfile(input_csv_path) or not os.access(input_csv_path, os.R_OK):
+            print(f"Error: The file '{input_csv_path}' does not exist or is not readable.")
             sys.exit(1)
-        available_players = create_available_players_list_from_csv(input_path)
+        available_players = extract_full_names_from_csv(input_csv_path)
+    # if provided as an arg, check google sheet and extract all available players
+    elif input_google_sheet_id is not None:
+        available_players = extract_full_names_from_sheets(get_sheet_values(input_google_sheet_id, input_google_sheet_range, input_google_sheet_client_auth_path))
     else:
         available_players = None
 

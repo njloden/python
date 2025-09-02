@@ -22,6 +22,7 @@ import pandas
 import collections
 import tabulate
 import gspread
+import rapidfuzz
 from oauth2client.file import Storage
 from oauth2client import tools
 from oauth2client.client import flow_from_clientsecrets
@@ -125,6 +126,7 @@ def extract_full_names_from_sheets(rows):
     """
     full_names = []
     for row in rows:
+        print(row)
         i = 0
         while i < len(row) - 2:
             pos, first, last = row[i], row[i+1], row[i+2]
@@ -134,6 +136,22 @@ def extract_full_names_from_sheets(rows):
             else:
                 i += 1
     return full_names
+
+
+# Fuzzy match helper for player names
+def is_fuzzy_match(name, name_list, threshold=70):
+    """
+    Fuzzy match a name against a list of names using rapidfuzz.
+    Args:
+        name (str): The name to match.
+        name_list (iterable): List or set of names to match against.
+        threshold (int): Minimum match score (0-100) to consider a match.
+    Returns:
+        bool: True if a fuzzy match above threshold is found, else False.
+    """
+    # Convert name_list to list for rapidfuzz
+    match, score, _ = rapidfuzz.process.extractOne(name.lower(), list(name_list))
+    return score >= threshold
 
 
 def create_player_dict():
@@ -179,8 +197,10 @@ def get_team_stats(team_name, available_players=None):
     # Iterate over each stat record in the API response
     for record in data:
         player_name = record["player"]
-        # Only add player if not filtering, or if player is in available_players (case-insensitive)
-        if available_players is not None and player_name.lower() not in available_players:
+        print(player_name)
+        # Only add player if not filtering, or if player is in available_players (case-insensitive, fuzzy)
+        if available_players is not None and not is_fuzzy_match(player_name, available_players):
+            print(f"Skipping player not in list (fuzzy): {player_name}")
             continue
         pid = record["playerId"]  # Unique player ID
         player = players[pid]  # Get or create the player entry
@@ -284,13 +304,19 @@ def main():
     else:
         available_players = None
 
+    print(available_players)
     # Loop through each team, fetch player stats, and add them to the list
     all_players = []
     for team in team_list:
         all_players.extend(get_team_stats(format_team_name(team), available_players=available_players))
 
-    # Build and print the comparison table for the specified position
-    build_comparison_table(all_players, position, available_players=available_players)
+    # Build and print comparison tables for each position if 'all' is specified
+    ALL_POSITIONS = ["qb", "rb", "wr", "te", "pk"]
+    if position.lower() == "all":
+        for pos in ALL_POSITIONS:
+            build_comparison_table(all_players, pos, available_players=available_players)
+    else:
+        build_comparison_table(all_players, position, available_players=available_players)
 
 
 if __name__ == "__main__":
